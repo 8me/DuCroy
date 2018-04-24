@@ -60,7 +60,46 @@ class Osci(object):
         readback = readback.replace("VERTICAL_GAIN","")
         return float(readback)
 
+    def set_timebase(self, timebase):
+        """Writes the timebase setting of the oscilloscope
+        Parameters
+        ----------
+        timebase: the timebase, which should be written to the osci
+        Returns
+        -------
+        timebase: readback of the timebase [seconds/div]
+        """
+        command = "TDIV"
+        timebase_string = self.decimal_to_visa_string(timebase)
+        self.write(command, value=timebase_string)
+        return self.get_timebase()
 
+
+    def get_timebase(self):
+        """Reads the current timebase setting of the oscilloscope
+        Returns
+        -------
+        timebase: timebase float [seconds/div]
+        """
+        command = "TDIV"
+        readback = self.read(command)
+        readback = readback.replace(command,"")
+        readback = readback.replace("S","")
+        return float(readback)
+
+    def get_horizontal_interval(self):
+        """Reads the current horizontal interval (meaning the timestep between
+        two samples) setting of the oscilloscope
+        Returns
+        -------
+        timebase: timebase float [seconds/div]
+        """
+        command = "INSP? \"HORIZ_INTERVAL\""
+        readback = self.visa_if.query(command)
+        readback = readback.split('"')[1]
+        readback = readback.replace("HORIZ_INTERVAL","")
+        readback = readback.replace(":","")
+        return float(readback)
 
     def decimal_to_visa_string(self, value):
         value = float(value)
