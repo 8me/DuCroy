@@ -101,6 +101,38 @@ class Osci(object):
         readback = readback.replace(":","")
         return float(readback)
 
+    def set_holdoff(self, events):
+        command = "TRSE"
+        trigger_settings = self._read_trigger_select()
+
+
+
+    def _read_trigger_select(self):
+        command = "TRSE"
+        readback = self.read(command)
+        readback = self._clean_string(readback)
+        values = readback.split(",")
+        type = values[0]
+        values = values[1:]
+        retval = dict(zip(value[::2],value[1::2]))
+        retval['type'] = type
+        return retval
+
+    def _clean_string(self, value, remove_unit=False):
+        command_end_pos = value.find(" ")
+        if value.find("INSP") != -1:
+            value = value.split('"')[1]
+            value_begin_pos = value.find(":")
+            value = value[value_begin_pos+1:]
+            value = value.strip()
+        else:
+            value = value[command_end_pos+1:]
+            if remove_unit:
+                unit_begin_pos = value.rfind(" ")
+                value = value[:unit_begin_pos]
+        return value
+
+
     def decimal_to_visa_string(self, value):
         value = float(value)
         return "{:.2E}".format(value)
