@@ -18,3 +18,24 @@ class TestOsci(unittest.TestCase):
         osci.rm = MagicMock()
         osci._open_resource()
         osci.rm.open_resource.assert_called_with(OPEN_CMD.format(ip))
+
+    @patch('visa.ResourceManager')
+    def test_write(self, rm_mock):
+        ip = '1'
+        osci = Osci(ip)
+        osci.visa_if = MagicMock()
+        osci.write("VDIV","C1","1","V")
+        osci.visa_if.write.assert_called_with("C1:VDIV 1V")
+
+    @patch('visa.ResourceManager')
+    def test_read(self, rm_mock):
+        ip = '1'
+        osci = Osci(ip)
+        osci.visa_if = MagicMock()
+        osci.read("VDIV","C1")
+        osci.visa_if.query.assert_called_with("C1:VDIV?")
+
+    def test_variable_conversion(self):
+        ip = '1'
+        osci = Osci(ip)
+        self.assertEqual(osci.decimal_to_visa_string(1e3),"1.00E+03")
