@@ -53,8 +53,13 @@ class Osci(object):
 
     def get_channel_gain(self, channel):
         command = channel + ":INSP? \"VERTICAL_GAIN\""
-        readback = self.visa_interface.query(command)
-        readback = readback.replace("")
+        readback = self.visa_if.query(command)
+        readback = readback.replace("\"","")
+        readback = readback.replace(channel+":INSP","")
+        readback = readback.replace(":","")
+        readback = readback.replace("VERTICAL_GAIN","")
+        return float(readback)
+
 
 
     def decimal_to_visa_string(self, value):
