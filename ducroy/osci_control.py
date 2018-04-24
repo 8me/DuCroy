@@ -26,7 +26,7 @@ class Osci(object):
             self.visa_if.write(command)
         except:
             print("Invalid combination of commands!")
-    
+
     def read(self, command, channel=None):
         if channel is not None:
             command = channel + ":" + command
@@ -36,3 +36,17 @@ class Osci(object):
         except:
             print("Couldn't read command!")
             return None
+
+    def set_channel_gain(self, voltage, channel):
+        command = "VDIV"
+        voltage_string = self.decimal_to_visa_string(voltage)
+        self.write(command, channel, voltage_string, "V")
+        readback = self.read(command,channel)
+        readback = readback.replace(channel+":"+command,"")
+        readback = readback.replace("V","")
+        return float(readback)
+
+
+    def decimal_to_visa_string(self, value):
+        value = float(value)
+        return "{:.2E}".format(value)
