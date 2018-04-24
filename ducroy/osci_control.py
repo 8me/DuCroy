@@ -31,14 +31,24 @@ class Osci(object):
             print("Couldn't read command!")
             return None
 
-    def set_channel_gain(self, voltage, channel):
+    def set_channel_vdiv(self, voltage, channel):
         command = "VDIV"
         voltage_string = self.decimal_to_visa_string(voltage)
         self.write(command, channel, voltage_string, "V")
+        retval = self.get_channel_gain(channel)
+        return retval
+
+    def get_channel_vdiv(self, channel):
+        command = "VDIV"
         readback = self.read(command,channel)
         readback = readback.replace(channel+":"+command,"")
         readback = readback.replace("V","")
         return float(readback)
+
+    def get_channel_gain(self, channel):
+        command = channel + ":INSP? \"VERTICAL_GAIN\""
+        readback = self.visa_interface.query(command)
+        readback = readback.replace("")
 
 
     def decimal_to_visa_string(self, value):
