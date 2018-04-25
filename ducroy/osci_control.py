@@ -105,6 +105,29 @@ class Osci(object):
         command = "TRSE"
         trigger_settings = self._read_trigger_select()
 
+    def set_trigger_level(self, level):
+        """Sets the trigger level
+        Returns
+        -------
+        trigger_level: new trigger_level float [V]
+        """
+        command = "TRLV"
+        level_string = self.decimal_to_visa_string(level)
+        self.write(command, value=level_string)
+        readback = self.get_trigger_level()
+        return readback
+
+    def get_trigger_level(self):
+        """Reads the trigger level
+        Returns
+        -------
+        trigger_level: float [V]
+        """
+        command = "TRLV"
+        readback = self.read(command)
+        readback = self._clean_string(readback,True)
+        return readback
+
 
 
     def _read_trigger_select(self):
@@ -114,8 +137,8 @@ class Osci(object):
         values = readback.split(",")
         type = values[0]
         values = values[1:]
-        retval = dict(zip(value[::2],value[1::2]))
-        retval['type'] = type
+        retval = dict(zip(values[::2],values[1::2]))
+        retval['TYPE'] = type
         return retval
 
     def _clean_string(self, value, remove_unit=False):
