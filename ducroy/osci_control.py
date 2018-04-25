@@ -37,6 +37,38 @@ class Osci(object):
             print("Couldn't read command!")
             return None
 
+    def set_sequence_mode(self, sequences):
+        command = "SEQ"
+        argument = ""
+        if sequences is None:
+            argument = "OFF"
+        else:
+            argument = "ON," + str(sequences)
+        self.write(command,value=argument)
+
+        return self.get_number_of_sequences()
+
+    def get_number_of_sequences(self):
+        sequence_info = self._read_sequence_info()
+        if sequence_info[0] == 'OFF':
+            return None
+        else:
+            return int(sequence_info[1])
+
+
+    def get_samples_per_wf(self):
+        sequence_info = self._read_sequence_info()
+        print(sequence_info)
+        return float(sequence_info[-1])
+
+    def _read_sequence_info(self):
+        command = "SEQ"
+        readback = self.read(command)
+        readback = self._clean_string(readback, True)
+        return readback.split(',')
+
+
+
     def set_channel_vdiv(self, voltage, channel):
         command = "VDIV"
         voltage_string = self.decimal_to_visa_string(voltage)
