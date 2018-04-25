@@ -104,15 +104,50 @@ class Osci(object):
     def set_holdoff(self, events):
         command = "TRSE"
         trigger_settings = self._read_trigger_select()
+        trigger_source = trigger_settings['SR']
+        trigger_settings.clear()
+        trigger_settings['TYPE'] = 'EDGE'
+        trigger_settings['SR'] = trigger_source
+        if events is None:
+            trigger_settings['HT'] = "OFF"
+        else:
+            trigger_settings['HT'] = 'EV'
+            trigger_settings['HV'] = str(events)
+        self._write_trigger_select(trigger_settings)
 
+    def set_trigger_slope(self, slope, channel=None):
+        """Sets the trigger slope
+        Returns
+        -------
+        slope: slope afterwards as string
+        """
+        command = "TRSL"
+        if channel is None:
+            current_settings = self._read_trigger_select()
+            channel = current_settings['SR']
+        self.write(command, channel, slope)
+        retval = self.get_trigger_slope()
+        return retval
 
-
+    def get_trigger_slope(self, channel=None):
+        """Gets the trigger slope
+        Returns
+        -------
+        slope: current slope setting as string
+        """
+        command = "TRSL"
+        if channel is None:
+            current_settings = self._read_trigger_select()
+            channel = current_settings['SR']
+        readback = self.read(command, channel)
+        readback = self._clean_string(readback)
+        return readback
 
     def set_trigger_source(self, channel):
         """Sets the trigger source
         Returns
         -------
-        trigger_source: the new trigger source
+        source: the new trigger source
         """
         current_settings = self._read_trigger_select()
         current_settings['SR'] = channel
@@ -124,7 +159,7 @@ class Osci(object):
         """Returns the trigger source
         Returns
         -------
-        trigger_source: current trigger source
+        source: current trigger source
         """
         current_settings = self._read_trigger_select()
         return current_settings['SR']
@@ -133,7 +168,7 @@ class Osci(object):
         """Sets the trigger level
         Returns
         -------
-        trigger_level: new trigger_level float [V]
+        level: new trigger_level float [V]
         """
         command = "TRLV"
         level_string = self.decimal_to_visa_string(level)
@@ -148,7 +183,7 @@ class Osci(object):
         """Reads the trigger level
         Returns
         -------
-        trigger_level: float [V]
+        level: float [V]
         """
         command = "TRLV"
         if channel is None:
@@ -168,6 +203,7 @@ class Osci(object):
                 argument += key + ',' + value
         argument = settings['TYPE'] + ',' + argument
         self.write(command, value=argument)
+
 
     def _read_trigger_select(self):
         command = "TRSE"
@@ -193,7 +229,7 @@ class Osci(object):
             if remove_unit:
                 unit_begin_pos = value.rfind(" ")
                 value = value[:unit_begin_pos]
-        return value
+        return value.strip()
 
 
     def decimal_to_visa_string(self, value):
