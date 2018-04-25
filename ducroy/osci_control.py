@@ -101,6 +101,137 @@ class Osci(object):
         readback = readback.replace(":","")
         return float(readback)
 
+    def set_holdoff(self, events):
+        command = "TRSE"
+        trigger_settings = self._read_trigger_select()
+        trigger_source = trigger_settings['SR']
+        trigger_settings.clear()
+        trigger_settings['TYPE'] = 'EDGE'
+        trigger_settings['SR'] = trigger_source
+        if events is None:
+            trigger_settings['HT'] = "OFF"
+        else:
+            trigger_settings['HT'] = 'EV'
+            trigger_settings['HV'] = str(events)
+        self._write_trigger_select(trigger_settings)
+
+    def set_trigger_slope(self, slope, channel=None):
+        """Sets the trigger slope
+        Returns
+        -------
+        slope: slope afterwards as string
+        """
+        command = "TRSL"
+        if channel is None:
+            current_settings = self._read_trigger_select()
+            channel = current_settings['SR']
+        self.write(command, channel, slope)
+        retval = self.get_trigger_slope()
+        return retval
+
+    def get_trigger_slope(self, channel=None):
+        """Gets the trigger slope
+        Returns
+        -------
+        slope: current slope setting as string
+        """
+        command = "TRSL"
+        if channel is None:
+            current_settings = self._read_trigger_select()
+            channel = current_settings['SR']
+        readback = self.read(command, channel)
+        readback = self._clean_string(readback)
+        return readback
+
+    def set_trigger_source(self, channel):
+        """Sets the trigger source
+        Returns
+        -------
+        source: the new trigger source
+        """
+        current_settings = self._read_trigger_select()
+        current_settings['SR'] = channel
+        self._write_trigger_select(current_settings)
+        current_settings = self._read_trigger_select()
+        return current_settings['SR']
+
+    def get_trigger_source(self):
+        """Returns the trigger source
+        Returns
+        -------
+        source: current trigger source
+        """
+        current_settings = self._read_trigger_select()
+        return current_settings['SR']
+
+    def set_trigger_level(self, level, channel):
+        """Sets the trigger level
+        Returns
+        -------
+        level: new trigger_level float [V]
+        """
+        command = "TRLV"
+        level_string = self.decimal_to_visa_string(level)
+        if channel is None:
+            current_settings = self._read_trigger_select()
+            channel = current_settings['SR']
+        self.write(command, channel, level_string)
+        readback = self.get_trigger_level()
+        return readback
+
+    def get_trigger_level(self, channel=None):
+        """Reads the trigger level
+        Returns
+        -------
+        level: float [V]
+        """
+        command = "TRLV"
+        if channel is None:
+            current_settings = self._read_trigger_select()
+            channel = current_settings['SR']
+        readback = self.read(command,channel)
+        readback = self._clean_string(readback,True)
+        return readback
+
+    def _write_trigger_select(self, settings):
+        command = "TRSE"
+        argument = ""
+        for key, value in settings.items():
+            if argument != "":
+                argument += ','
+            if key != 'TYPE':
+                argument += key + ',' + value
+        argument = settings['TYPE'] + ',' + argument
+        self.write(command, value=argument)
+
+
+    def _read_trigger_select(self):
+        command = "TRSE"
+        readback = self.read(command)
+        readback = self._clean_string(readback)
+        readback = readback.strip()
+        values = readback.split(",")
+        type = values[0]
+        values = values[1:]
+        retval = dict(zip(values[::2],values[1::2]))
+        retval['TYPE'] = type
+        return retval
+
+    def _clean_string(self, value, remove_unit=False):
+        command_end_pos = value.find(" ")
+        if value.find("INSP") != -1:
+            value = value.split('"')[1]
+            value_begin_pos = value.find(":")
+            value = value[value_begin_pos+1:]
+            value = value.strip()
+        else:
+            value = value[command_end_pos+1:]
+            if remove_unit:
+                unit_begin_pos = value.rfind(" ")
+                value = value[:unit_begin_pos]
+        return value.strip()
+
+
     def decimal_to_visa_string(self, value):
         value = float(value)
         return "{:.2E}".format(value)
