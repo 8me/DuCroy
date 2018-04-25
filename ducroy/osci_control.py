@@ -105,7 +105,31 @@ class Osci(object):
         command = "TRSE"
         trigger_settings = self._read_trigger_select()
 
-    def set_trigger_level(self, level):
+
+
+
+    def set_trigger_source(self, channel):
+        """Sets the trigger source
+        Returns
+        -------
+        trigger_source: the new trigger source
+        """
+        current_settings = self._read_trigger_select()
+        current_settings['SR'] = channel
+        self._write_trigger_select(current_settings)
+        current_settings = self._read_trigger_select()
+        return current_settings['SR']
+
+    def get_trigger_source(self):
+        """Returns the trigger source
+        Returns
+        -------
+        trigger_source: current trigger source
+        """
+        current_settings = self._read_trigger_select()
+        return current_settings['SR']
+
+    def set_trigger_level(self, level, channel):
         """Sets the trigger level
         Returns
         -------
@@ -113,27 +137,43 @@ class Osci(object):
         """
         command = "TRLV"
         level_string = self.decimal_to_visa_string(level)
-        self.write(command, value=level_string)
+        if channel is None:
+            current_settings = self._read_trigger_select()
+            channel = current_settings['SR']
+        self.write(command, channel, level_string)
         readback = self.get_trigger_level()
         return readback
 
-    def get_trigger_level(self):
+    def get_trigger_level(self, channel=None):
         """Reads the trigger level
         Returns
         -------
         trigger_level: float [V]
         """
         command = "TRLV"
-        readback = self.read(command)
+        if channel is None:
+            current_settings = self._read_trigger_select()
+            channel = current_settings['SR']
+        readback = self.read(command,channel)
         readback = self._clean_string(readback,True)
         return readback
 
-
+    def _write_trigger_select(self, settings):
+        command = "TRSE"
+        argument = ""
+        for key, value in settings.items():
+            if argument != "":
+                argument += ','
+            if key != 'TYPE':
+                argument += key + ',' + value
+        argument = settings['TYPE'] + ',' + argument
+        self.write(command, value=argument)
 
     def _read_trigger_select(self):
         command = "TRSE"
         readback = self.read(command)
         readback = self._clean_string(readback)
+        readback = readback.strip()
         values = readback.split(",")
         type = values[0]
         values = values[1:]
