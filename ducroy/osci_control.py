@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 import visa
+import numpy as np
 
 OPEN_CMD = "TCPIP0::{}::INSTR"
 
@@ -36,6 +37,49 @@ class Osci(object):
         except:
             print("Couldn't read command!")
             return None
+
+    def set_sequence_mode(self, sequences):
+        command = "SEQ"
+        argument = ""
+        if sequences is None:
+            argument = "OFF"
+        else:
+            argument = "ON," + str(sequences)
+        self.write(command,value=argument)
+
+        return self.get_number_of_sequences()
+
+    def get_number_of_sequences(self):
+        sequence_info = self._read_sequence_info()
+        if sequence_info[0] == 'OFF':
+            return None
+        else:
+            return int(sequence_info[1])
+
+    def record_waveforms(self):
+        command = "ARM; WAIT;"
+        self.write(command)
+
+    def get_waveform_memory(self, channel):
+        command = channel + ":WF? DAT1"
+        sequences = self.get_number_of_sequences()
+        readback = self.visa_if.query_binary_values(command, datatype='b')
+        samples = int(len(readback)/sequences)
+        return np.reshape(readback, (sequences,samples))
+
+
+    def get_samples_per_wf(self):
+        sequence_info = self._read_sequence_info()
+        print(sequence_info)
+        return int(float(sequence_info[-1]))+2
+
+    def _read_sequence_info(self):
+        command = "SEQ"
+        readback = self.read(command)
+        readback = self._clean_string(readback, True)
+        return readback.split(',')
+
+
 
     def set_channel_vdiv(self, voltage, channel):
         command = "VDIV"
