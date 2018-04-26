@@ -70,6 +70,9 @@ class Osci(object):
                 retval.append(float(value))
         return retval
 
+    def clear_sweeps(self):
+        self.write("CLSW;")
+
     def get_measure(self, measure_channel):
         command = "PAST? CUST," + measure_channel
         self.write(command)
@@ -79,9 +82,12 @@ class Osci(object):
         retval = dict(zip(readback[2::2],readback[3::2]))
         for key, value in retval.items():
             if key != 'SWEEPS':
-                unit_begin_pos = value.rfind(" ")
-                value = value[:unit_begin_pos]
-                retval[key] = float(value)
+                if value.find("UN") >= 0:
+                    retval[key] = None
+                else:
+                    unit_begin_pos = value.rfind(" ")
+                    value = value[:unit_begin_pos]
+                    retval[key] = float(value)
             else:
                 value = value.strip()
                 retval[key] = int(value)
