@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 import visa
+import numpy as np
 
 OPEN_CMD = "TCPIP0::{}::INSTR"
 
@@ -55,11 +56,22 @@ class Osci(object):
         else:
             return int(sequence_info[1])
 
+    def record_waveforms(self):
+        command = "ARM; WAIT;"
+        self.write(command)
+
+    def get_waveform_memory(self, channel):
+        command = channel + ":WF? DAT1"
+        sequences = self.get_number_of_sequences()
+        readback = self.visa_if.query_binary_values(command, datatype='b')
+        samples = int(len(readback)/sequences)
+        return np.reshape(readback, (sequences,samples))
+
 
     def get_samples_per_wf(self):
         sequence_info = self._read_sequence_info()
         print(sequence_info)
-        return float(sequence_info[-1])
+        return int(float(sequence_info[-1]))+2
 
     def _read_sequence_info(self):
         command = "SEQ"
