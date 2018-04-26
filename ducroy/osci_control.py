@@ -56,6 +56,40 @@ class Osci(object):
         else:
             return int(sequence_info[1])
 
+    def get_number_of_sweeps(self):
+        command = "PAST? CUST, SWEEPS"
+        self.write(command)
+        readback = self.visa_if.read_raw().decode('ascii')
+        readback = readback.replace("PAST CUST,SWEEPS,", "")
+        readback = readback.strip().split(',')
+        retval = []
+        for value in readback:
+            if value == 'UNDEF':
+                retval.append(None)
+            else:
+                retval.append(float(value))
+        return retval
+
+    def get_measure(self, measure_channel):
+        command = "PAST? CUST," + measure_channel
+        self.write(command)
+        readback = self.visa_if.read_raw().decode('ascii')
+        readback = readback.replace("PAST CUST,"+measure_channel+",","")
+        readback = readback.split(",")
+        retval = dict(zip(readback[2::2],readback[3::2]))
+        for key, value in retval.items():
+            if key != 'SWEEPS':
+                unit_begin_pos = value.rfind(" ")
+                value = value[:unit_begin_pos]
+                retval[key] = float(value)
+            else:
+                value = value.strip()
+                retval[key] = int(value)
+
+        self.write("CLSW;")
+        return retval
+
+
     def record_waveforms(self):
         command = "ARM; WAIT;"
         self.write(command)
