@@ -2,6 +2,7 @@
 
 import visa
 import numpy as np
+import h5py
 
 OPEN_CMD = "TCPIP0::{}::INSTR"
 
@@ -37,6 +38,24 @@ class Osci(object):
         except:
             print("Couldn't read command!")
             return None
+
+    @staticmethod
+    def save_waveforms_to_file(filepath, data_array, hor_interval, vert_gain, comment=None):
+        with h5py.File(filepath, "w") as file:
+            file.attrs[u'vertical_gain'] = vert_gain
+            file.attrs[u'horizontal_interval'] = hor_interval
+            if comment is not None:
+                file.attrs[u'comment'] = comment
+            file.create_dataset('waveforms', data=data_array)
+    @staticmethod
+    def read_waveforms_from_file(filepath):
+        retval = dict()
+        with h5py.File(filepath, "r") as file:
+            retval['vertical_gain'] = float(file.attrs[u'vertical_gain'])
+            retval['horizontal_interval'] = float(file.attrs[u'horizontal_interval'])
+            retval['comment'] = str(file.attrs[u'comment'])
+            retval['data'] = np.asarray(file['waveforms'])
+        return retval
 
     def set_sequence_mode(self, sequences):
         command = "SEQ"
@@ -118,8 +137,6 @@ class Osci(object):
         readback = self.read(command)
         readback = self._clean_string(readback, True)
         return readback.split(',')
-
-
 
     def set_channel_vdiv(self, voltage, channel):
         command = "VDIV"
