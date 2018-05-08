@@ -15,11 +15,10 @@ clean:
 	python setup.py clean --all
 
 test: 
-	py.test --junitxml=./junit.xml || true
+	py.test --junitxml=./junit.xml ducroy || true
 
 test-cov:
-	py.test --junitxml=./junit.xml \
-		--cov ./ --cov-report term-missing --cov-report xml || true
+	py.test --cov ./ --cov-report term-missing --cov-report xml ducroy || true
 
 test-loop: 
 	py.test || true
