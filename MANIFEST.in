@@ -1,2 +1,3 @@
 include README.md
 include LICENSE
+recursive-include ducroy/tests/test_data *
