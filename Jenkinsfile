@@ -50,20 +50,6 @@ def get_stages(docker_image) {
                     throw e
                 }
             }
-            stage('Test') {
-                try { 
-                    sh """
-                        . ${PYTHON_VENV}/bin/activate
-                        make clean
-                        make test
-                    """
-                    junit 'junit.xml'
-                    archive 'junit.xml'
-                } catch (e) { 
-                    sendMail("Test Suite Failed")
-                    throw e
-                }
-            }
             stage("Install") {
                 try { 
                     sh """
@@ -75,11 +61,23 @@ def get_stages(docker_image) {
                     throw e
                 }
             }
+            stage('Test') {
+                try { 
+                    sh """
+                        . ${PYTHON_VENV}/bin/activate
+                        make test
+                    """
+                    junit 'junit.xml'
+                    archive 'junit.xml'
+                } catch (e) { 
+                    sendMail("Test Suite Failed")
+                    throw e
+                }
+            }
             stage('Coverage') {
                 try { 
                     sh """
                         . ${PYTHON_VENV}/bin/activate
-                        make clean
                         make test-cov
                     """
                     step([$class: 'CoberturaPublisher',
