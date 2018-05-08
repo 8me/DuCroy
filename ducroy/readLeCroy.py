@@ -1,8 +1,6 @@
 from struct import unpack
-import matplotlib.pyplot as pl
 import numpy as np
 import struct
-import array
 
 
 def read_timetrace(filename, N):
@@ -14,18 +12,11 @@ def read_timetrace(filename, N):
     Output:
 
     '''
-    
-    fid = open(filename, "r")
-    data = fid.read(50)
-    WAVEDESC = str.find(data, 'WAVEDESC')
-    #print("WAVEDESC: {}".format(WAVEDESC))
-    # ---------------------------------------------------------------------------------------
-    # Define the addresses of the various informations in the file
-    # These addresses are valid for the template LECROY_2_3
-    # ---------------------------------------------------------------------------------------
-    #TESTED_TEMPLATE = 'LECROY_2_3'
 
-    # Addresses (WAVEDESC + address as stated in the LECROY template)
+    fid = open(filename, "rb")
+    data = fid.read(50).decode('ascii')
+    WAVEDESC = str.find(data, 'WAVEDESC')
+
     aCOMM_TYPE = WAVEDESC + 32
     aCOMM_ORDER = WAVEDESC + 34
     aWAVE_DESCRIPTOR = WAVEDESC + 36  # length of the descriptor block
@@ -34,8 +25,9 @@ def read_timetrace(filename, N):
     aWAVE_ARRAY_1 = WAVEDESC + 60  # length (in Byte) of the sample array
 
     aRESERVED1 = WAVEDESC + 112
-    aRESERVED2 = WAVEDESC + 114
-    # number of datapoints in data array (should be == WAVE_ARRAY_1 for "byte" style)
+    # aRESERVED2 = WAVEDESC + 114
+    # number of datapoints in data array
+    # (should be == WAVE_ARRAY_1 for "byte" style)
     aWAVE_ARRAY_COUNT = WAVEDESC + 116
     # (real?) number of sequences (= subarrays)
     aSUBARRAY_COUNT = WAVEDESC + 144
@@ -49,19 +41,18 @@ def read_timetrace(filename, N):
     aHORIZ_INTERVAL = WAVEDESC + 176
     aHORIZ_OFFSET = WAVEDESC + 180
 
-    #---------------------------------------------------------------------------------------
-    # determine the number storage format HIFIRST / LOFIRST    (big endian / little endian)
-    #---------------------------------------------------------------------------------------
+    # determine the number storage format
+    # HIFIRST / LOFIRST    (big endian / little endian)
 
     fid.seek(aCOMM_ORDER)
     COMM_ORDER = ord(fid.read(1))
-    #print("aCOMM_ORDER: {}".format(aCOMM_ORDER))
-    #print("COMM_ORDER: {}".format(COMM_ORDER))
+    # print("aCOMM_ORDER: {}".format(aCOMM_ORDER))
+    # print("COMM_ORDER: {}".format(COMM_ORDER))
     if COMM_ORDER == 0:
         fmt = '>'
     else:
         fmt = '<'
-    #print("fmt: {}".format(fmt))
+    # print("fmt: {}".format(fmt))
     COMM_TYPE = ReadWord(fid, fmt, aCOMM_TYPE)
     print("COMM_TYPE: {}".format(COMM_TYPE))
     WAVE_DESCRIPTOR = ReadLong(fid, fmt, aWAVE_DESCRIPTOR)
@@ -74,16 +65,16 @@ def read_timetrace(filename, N):
     print("WAVE_ARRAY_1: {}".format(WAVE_ARRAY_1))
     SUBARRAY_COUNT = ReadLong(fid, fmt, aSUBARRAY_COUNT)
     print("SUBARRAY_COUNT: {}".format(SUBARRAY_COUNT))
-    VERTICAL_GAIN = ReadFloat(fid, fmt, aVERTICAL_GAIN) 
+    VERTICAL_GAIN = ReadFloat(fid, fmt, aVERTICAL_GAIN)
     print("VERTICAL_GAIN: {}".format(VERTICAL_GAIN))
     try:
         VERTICAL_OFFSET = ReadFloat(fid, fmt, aVERTICAL_OFFSET)
-    except:
-        #print("No vertical offset found in: {}".format(filename))
+    except:  # noqa
+        # print("No vertical offset found in: {}".format(filename))
         VERTICAL_OFFSET = np.nan
-    #print("VERTICAL_OFFSET: {}".format(VERTICAL_OFFSET))
+    # print("VERTICAL_OFFSET: {}".format(VERTICAL_OFFSET))
     NOM_SUBARRAY_COUNT = ReadWord(fid, fmt, aNOM_SUBARRAY_COUNT)
-    #print("NOM_SUBARRAY_COUNT: {}".format(NOM_SUBARRAY_COUNT))
+    # print("NOM_SUBARRAY_COUNT: {}".format(NOM_SUBARRAY_COUNT))
     if NOM_SUBARRAY_COUNT == 0:
         res1 = ReadWord(fid, fmt, aRESERVED1)
         res2 = ReadWord(fid, fmt, aRESERVED1)
@@ -94,7 +85,8 @@ def read_timetrace(filename, N):
     HORIZ_INTERVAL = ReadFloat(fid, fmt, aHORIZ_INTERVAL)
     HORIZ_OFFSET = ReadDouble(fid, fmt, aHORIZ_OFFSET)
     fid.close()
-    #print(data, WAVEDESC, COMM_ORDER, COMM_TYPE, WAVE_DESCRIPTOR, USER_TEXT, TRIGTIME_array, WAVE_ARRAY_1)
+    # print(data, WAVEDESC, COMM_ORDER, COMM_TYPE, WAVE_DESCRIPTOR,
+    # USER_TEXT, TRIGTIME_array, WAVE_ARRAY_1)
     fid = open(filename, "rb")
     y = np.array([])
     for i in range(N):
@@ -106,8 +98,8 @@ def read_timetrace(filename, N):
     x = np.arange(1, len(y) + 1)  # *HORIZ_INTERVAL + HORIZ_OFFSET
     fid.close()
 
-    return (x.reshape(SUBARRAY_COUNT * N, WAVE_ARRAY_1 / SUBARRAY_COUNT),
-            y.reshape(SUBARRAY_COUNT * N, WAVE_ARRAY_1 / SUBARRAY_COUNT),
+    return (x.reshape(SUBARRAY_COUNT * N, WAVE_ARRAY_1 // SUBARRAY_COUNT),
+            y.reshape(SUBARRAY_COUNT * N, WAVE_ARRAY_1 // SUBARRAY_COUNT),
             VERTICAL_GAIN,
             VERTICAL_OFFSET,
             HORIZ_INTERVAL,
@@ -147,13 +139,11 @@ def ReadLong(fid, fmt, Addr):
 def ReadFloat(fid, fmt, Addr):
     fid.seek(Addr)
     s = fid.readline(4)
-    #print(len(s))
     s = unpack(fmt + 'f', s)
     if(type(s) == tuple):
         return s[0]
     else:
         return s
-
 
 
 def ReadDouble(fid, fmt, Addr):
