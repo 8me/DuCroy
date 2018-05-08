@@ -43,7 +43,7 @@ def get_stages(docker_image) {
                 try { 
                     sh """
                         . ${PYTHON_VENV}/bin/activate
-                        make dependencies
+                        make dev-dependencies
                     """
                 } catch (e) { 
                     sendMail("Install Dev Dependencies Failed")
