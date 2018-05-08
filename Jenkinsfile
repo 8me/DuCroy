@@ -96,6 +96,36 @@ def get_stages(docker_image) {
                     throw e
                 }
             }
+            stage('Docs') {
+                try {
+                    sh """
+                        . ${PYTHON_VENV}/bin/activate
+                        make doc-dependencies
+                        cd doc
+                        export MPLBACKEND="agg"
+                        make html
+                    """
+                } catch (e) {
+                    sendChatMessage("Building Docs Failed")
+                    sendMail("Building Docs Failed")
+                    throw e
+                }
+            }
+            stage('Publishing Docs') {
+                try {
+                   publishHTML target: [
+                       allowMissing: false,
+                       alwaysLinkToLastBuild: false,
+                       keepAll: true,
+                       reportDir: 'doc/_build/html',
+                       reportFiles: 'index.html',
+                       reportName: 'Documentation'
+                   ]
+                } catch (e) {
+                    sendChatMessage("Publishing Docs Failed")
+                    sendMail("Publishing Docs Failed")
+                }
+            }
         }
     }
     return stages
