@@ -1,7 +1,11 @@
 #!/usr/bin/env python
 
+import tempfile
 import unittest
 from unittest.mock import patch, MagicMock
+
+import numpy as np
+
 from ducroy.osci_control import Osci, OPEN_CMD
 
 
@@ -39,3 +43,15 @@ class TestOsci(unittest.TestCase):
         ip = '1'
         osci = Osci(ip)
         self.assertEqual(osci.decimal_to_visa_string(1e3),"1.00E+03")
+
+    def test_write_read_waveforms(self):
+        waveforms = np.random.random((10, 10))
+        comment, h_int, v_gain = 'a', 1, 2
+        with tempfile.NamedTemporaryFile(delete=True) as fobj:
+            fp = fobj.name
+            Osci.save_waveforms_to_file(fp, waveforms, h_int, v_gain, comment)
+            file_data = Osci.read_waveforms_from_file(fp)
+            assert np.allclose(waveforms, file_data['data'])
+            assert file_data['horizontal_interval'] == h_int 
+            assert file_data['vertical_gain'] == v_gain
+            assert file_data['comment'] == comment
