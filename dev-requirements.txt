@@ -7,3 +7,6 @@ pytest-flake8
 pytest-pylint
 pytest-watch
 twine
+sphinx
+sphinx_rtd_theme
+numpydoc
