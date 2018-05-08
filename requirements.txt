@@ -1,1 +1,2 @@
 pyvisa
+pyvisa-py
