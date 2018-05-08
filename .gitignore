@@ -4,3 +4,4 @@ __pycache__
 ducroy.egg-info
 junit.xml
 *.swp
+doc/_build
