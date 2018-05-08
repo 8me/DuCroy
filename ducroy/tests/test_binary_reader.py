@@ -2,7 +2,7 @@ import os
 import tempfile
 import unittest
 
-from ducroy.readLeCroy import read_timetrace
+from ducroy.binary_reader import read_timetrace
 
 CWD = os.path.join(os.path.dirname(__file__), 'test_data')
 TESTFILENAME = os.path.join(CWD, "test.trc")
