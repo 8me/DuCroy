@@ -115,22 +115,23 @@ class Osci(object):
         return retval
 
 
-    def aquire_waveforms(self, channel, number_of_waveforms):
+    def aquire_waveforms(self, channels, number_of_waveforms):
         """Aquire a certain amount of waveforms, without being limited to the sequence memory of the oscilloscope
         Parameters
         ----------
-        channel (string): the channel where the data to read from
+        channels (string): list of channels where the data to read from
         number_of_waveforms (int): the amount of waveforms to record
         Returns
         -------
-        sequences: two dimensional array with the waveforms as ADC values 
+        sequences: two dimensional array with the waveforms as ADC values
         """
         number_of_sequences = self.set_sequence_mode(500)
-        sequences = np.array([])
-        for i in range(number_of_waveforms/number_of_sequences):
+        sequences = [np.array([])]*len(channels)
+        for i in range(number_of_waveforms//number_of_sequences):
             self.record_waveforms()
-            run_sequences = self.get_waveform_memory(channel)
-            sequences = np.reshape( np.append(sequences,run_sequences) , (-1,run_sequences.shape[1]))
+            for id, channel in enumerate(channels):
+                run_sequences = self.get_waveform_memory(channel)
+                sequences[id] = np.reshape( np.append(sequences[id],run_sequences) , (-1,run_sequences.shape[1]))
         return sequences
 
 
