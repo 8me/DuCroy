@@ -125,13 +125,27 @@ class Osci(object):
         -------
         sequences: two dimensional array with the waveforms as ADC values
         """
-        number_of_sequences = self.set_sequence_mode(500)
-        sequences = [np.array([])]*len(channels)
-        for i in range(number_of_waveforms//number_of_sequences):
+        number_of_sequences = 500
+        if number_of_waveforms < 500:
+            number_of_sequences = number_of_waveforms
+        number_of_sequences = self.set_sequence_mode(number_of_sequences)
+
+        sequences = dict()
+
+        for channel in channels:
+            sequences[channel] = np.array([])
+
+        number_of_recording_loops = number_of_waveforms//number_of_sequences
+        if number_of_waveforms == 0:
+            return sequences
+        elif number_of_recording_loops == 0:
+            number_of_recording_loops = 1
+        for i in range(number_of_recording_loops):
             self.record_waveforms()
-            for id, channel in enumerate(channels):
+            for channel in channels:
                 run_sequences = self.get_waveform_memory(channel)
-                sequences[id] = np.reshape( np.append(sequences[id],run_sequences) , (-1,run_sequences.shape[1]))
+                sequences[channel] = np.reshape( np.append(sequences[channel],run_sequences) , (-1,run_sequences.shape[1]))
+
         return sequences
 
 
