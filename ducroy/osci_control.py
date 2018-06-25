@@ -161,8 +161,9 @@ class Osci(object):
         sequences = self.get_number_of_sequences()
         readback = self.visa_if.query_binary_values(command, datatype='b')
         samples = int(len(readback)/sequences)
-        return np.reshape(readback, (sequences,samples))
-
+        retval = np.reshape(readback, (sequences,samples))
+        retval = retval.astype(np.int8)
+        return retval
 
     def get_samples_per_wf(self):
         sequence_info = self._read_sequence_info()
