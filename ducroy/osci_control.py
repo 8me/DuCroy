@@ -3,6 +3,7 @@
 import visa
 import numpy as np
 import h5py
+from tqdm import tqdm_notebook
 
 OPEN_CMD = "TCPIP0::{}::INSTR"
 
@@ -140,7 +141,7 @@ class Osci(object):
             return sequences
         elif number_of_recording_loops == 0:
             number_of_recording_loops = 1
-        for i in range(number_of_recording_loops):
+        for i in tqdm_notebook(range(number_of_recording_loops)):
             self.record_waveforms()
             for channel in channels:
                 run_sequences = self.get_waveform_memory(channel)
