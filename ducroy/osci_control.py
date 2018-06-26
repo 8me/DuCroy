@@ -126,6 +126,14 @@ class Osci(object):
         -------
         sequences: two dimensional array with the waveforms as ADC values
         """
+
+        if isinstance(channels, str):
+            channels = [channels]
+            print("Warning: channels should be list of strings")
+        elif not isnstance(channels, (list, tuple)):
+            raise ValueError("channels has to be a list of strings")
+
+
         number_of_sequences = 500
         if number_of_waveforms < 500:
             number_of_sequences = number_of_waveforms
