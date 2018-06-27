@@ -130,7 +130,7 @@ class Osci(object):
         if isinstance(channels, str):
             channels = [channels]
             print("Warning: channels should be list of strings")
-        elif not isnstance(channels, (list, tuple)):
+        elif not isinstance(channels, (list, tuple)):
             raise ValueError("channels has to be a list of strings")
 
 
