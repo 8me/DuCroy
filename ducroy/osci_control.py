@@ -110,6 +110,7 @@ class Osci(object):
                     retval[key] = float(value)
             else:
                 value = value.strip()
+		value = float(value)
                 retval[key] = int(value)
 
         self.write("CLSW;")
